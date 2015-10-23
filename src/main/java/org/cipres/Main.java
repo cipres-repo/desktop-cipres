@@ -74,11 +74,35 @@ public class Main extends Application
 		});
 
 		// This lets console.log messages go to stdout
+		// Enables an upcall from javascript (console.log) to java code.
+		/*
+			https://blogs.oracle.com/javafx/entry/communicating_between_javascript_and_javafx
+			https://docs.oracle.com/javafx/2/api/javafx/scene/web/WebEngine.html
+
+			You can pass arbitrary javascript to the JS engine of a WebEngine object using
+			WebEngine.executeScript().  It returns the javascript retval converted to a java type.  For
+			primitives, like integer it returns Integer or for  string -> String, but most JavaScript objects
+			will be wrapped in a JSObject.  Thus webEngine.executeScript("window") returns the javascript
+			current window object, wrapped in a JSOBject, a class that lets us manipulate the js object in 
+			java.
+
+			This method gets called each time the worker thread that loads the content changes.  It seems
+			to get called 3 times, SCHEDULED, RUNNING and SUCCEEDED.  Not sure we need it called more
+			than once.
+		*/
 		webEngine.getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) ->
 		{
+			System.out.println("Setup console log, state is " + newValue);
+			// Get the current js window, wrapped in a JSObject
 			JSObject window = (JSObject) webEngine.executeScript("window");
+
+
+			// Inject a member into the window, it's name is "java", it's value is the new bridge object.
 			JavaBridge bridge = new JavaBridge();
 			window.setMember("java", bridge);
+
+			// Have the js engine run a script that changes the built in console.log function
+			// to point to a new fn, defined here as calling our bridge's log() method.
 			webEngine.executeScript("console.log = function(message)\n" + "{\n" + "    java.log(message);\n" + "};");
 		});
 
@@ -94,6 +118,8 @@ public class Main extends Application
 
 
 		System.out.println("Loading " + webRoot);
+
+		// Loading happens on a background thread.  This returns right away.
 		webEngine.load(webRoot);
 
 		stage.show();
