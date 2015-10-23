@@ -22,6 +22,9 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.StackPane;
 import java.util.List;
 
+import javafx.scene.Node;
+import javafx.scene.paint.Color;
+
 public class Main extends Application 
 {
 	String webRoot;
@@ -51,16 +54,12 @@ public class Main extends Application
 	{
 		initWebRoot();
 
-		stage.setWidth(1000);
-		stage.setHeight(600);
-		Scene scene = new Scene(new Group());
-
-
 		final WebView browser = new WebView();
 		final WebEngine webEngine = browser.getEngine();
 
-		ScrollPane scrollPane = new ScrollPane();
-		scrollPane.setContent(browser);
+		Scene scene = new Scene(browser, 1000, 600, Color.web("#666970"));
+		stage.setScene(scene);
+
 
 		webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>() 
 		{
@@ -80,8 +79,7 @@ public class Main extends Application
 			JSObject window = (JSObject) webEngine.executeScript("window");
 			JavaBridge bridge = new JavaBridge();
 			window.setMember("java", bridge);
-			webEngine.executeScript("console.log = function(message)\n" +
-				"{\n" + "    java.log(message);\n" + "};");
+			webEngine.executeScript("console.log = function(message)\n" + "{\n" + "    java.log(message);\n" + "};");
 		});
 
 		// This makes javascript alert() popup an alert dialog window.
@@ -95,26 +93,9 @@ public class Main extends Application
 		});
 
 
-		/*
-		String cwd = Paths.get(".").toAbsolutePath().normalize().toString();
-		File file = new File(cwd, "index.html");
-		String index = "file://" + file.getAbsolutePath();
-		System.out.println("loading " + index);
-		webEngine.load(index);
-
-		 This doesn't work.  JS doesn't run.
-		webEngine.load(getClass().getResource("/index.html").toExternalForm());
-
-	     This does work:
-		webEngine.load("file:///Users/terri/desktop_package/index.html");
-		*/
-
 		System.out.println("Loading " + webRoot);
 		webEngine.load(webRoot);
 
-		scene.setRoot(scrollPane);
-
-		stage.setScene(scene);
 		stage.show();
 	}
 
@@ -124,4 +105,15 @@ public class Main extends Application
 		launch(args);
 	}
 }
+
+/*
+It seems this must be a public class defined in another file.
+class JavaBridge
+{
+    public void log(String text)
+    {
+        System.out.println(text);
+    }
+}
+*/
 
