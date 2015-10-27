@@ -104,6 +104,8 @@ public class Main extends Application
 			// Have the js engine run a script that changes the built in console.log function
 			// to point to a new fn, defined here as calling our bridge's log() method.
 			webEngine.executeScript("console.log = function(message)\n" + "{\n" + "    java.log(message);\n" + "};");
+			webEngine.executeScript("theCallback = function(iparams, vparams)\n" + "{\n" + "    java.callback(iparams, vparams);\n" + "};");
+
 		});
 
 		// This makes javascript alert() popup an alert dialog window.
@@ -131,15 +133,4 @@ public class Main extends Application
 		launch(args);
 	}
 }
-
-/*
-It seems this must be a public class defined in another file.
-class JavaBridge
-{
-    public void log(String text)
-    {
-        System.out.println(text);
-    }
-}
-*/
 
