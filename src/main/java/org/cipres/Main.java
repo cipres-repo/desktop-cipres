@@ -98,13 +98,14 @@ public class Main extends Application
 
 
 			// Inject a member into the window, it's name is "java", it's value is the new bridge object.
-			JavaBridge bridge = new JavaBridge();
+			JavaBridge bridge = new JavaBridge(stage);
 			window.setMember("java", bridge);
 
 			// Have the js engine run a script that changes the built in console.log function
 			// to point to a new fn, defined here as calling our bridge's log() method.
 			webEngine.executeScript("console.log = function(message)\n" + "{\n" + "    java.log(message);\n" + "};");
 			webEngine.executeScript("theCallback = function(iparams, vparams)\n" + "{\n" + "    java.callback(iparams, vparams);\n" + "};");
+			webEngine.executeScript("fileChooserType = 'desktop';\ntheFileChooser = function()\n" + "{\n" + "    return java.fileChooser();\n" + "};");
 
 		});
 

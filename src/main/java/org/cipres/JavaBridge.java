@@ -4,9 +4,19 @@ import netscape.javascript.JSObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.Map;
+import javafx.stage.Stage;
+import javafx.stage.FileChooser; 
+import java.io.File;
 
 public class JavaBridge
 {
+	Stage stage;
+
+	public JavaBridge(Stage stage)
+	{
+		this.stage = stage;
+	}
+
     public void log(String text)
     {
         System.out.println(text);
@@ -27,9 +37,9 @@ public class JavaBridge
 			imap = mapper.readValue(iparams, new TypeReference<Map<String, Object>>(){});
 			vmap = mapper.readValue(vparams, new TypeReference<Map<String, Object>>(){});
 
-			System.out.println("showMap iparams");
+			System.out.println("Converted JSON iparams to java:");
 			showMap(imap);
-			System.out.println("showMap vparams");
+			System.out.println("Converted JSON vparams to java:");
 			showMap(vmap);
 		}
 		catch (Exception e)
@@ -38,15 +48,27 @@ public class JavaBridge
 		}
 	}
 
+    public String fileChooser()
+	{
+		System.out.println("In java fileChooser()");
+		FileChooser fc = new FileChooser();
+		File file = fc.showOpenDialog(stage);
+		if (file != null)
+		{
+			System.out.println("Selected " + file.getAbsolutePath());
+			return file.getAbsolutePath();
+		}
+		System.out.println("Nothing selected");
+		return null;
+	}
+
 	private void showMap(Map<String, Object> m)
 	{
 		if (m == null) return;
 
 		for (String key : m.keySet())
 		{
-			System.out.println(key + "=" + m.get(key));
-			Object value = m.get(key);
-			System.out.println("value is of type: " + m.get(key).getClass().getName());
+			System.out.println(key + "=" + m.get(key) + ". Value is of type " +  m.get(key).getClass().getName());
 		}
 	}
 }
