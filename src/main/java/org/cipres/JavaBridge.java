@@ -23,9 +23,10 @@ public class JavaBridge
     }
 
 	// These should be json strings representing name/value maps
-	public void callback(String iparams, String vparams)
+	public boolean callback(String toolID, String iparams, String vparams)
 	{
 		System.out.println("In JavaBridge.callback");
+		System.out.println("toolID is: " + toolID);
 		System.out.println("iparams is: " + iparams);
 		System.out.println("vparams is: " + vparams);
 
@@ -37,14 +38,18 @@ public class JavaBridge
 			imap = mapper.readValue(iparams, new TypeReference<Map<String, Object>>(){});
 			vmap = mapper.readValue(vparams, new TypeReference<Map<String, Object>>(){});
 
-			System.out.println("Converted JSON iparams to java:");
+			System.out.println("Converted JSON Input Data Parameters to java:");
 			showMap(imap);
-			System.out.println("Converted JSON vparams to java:");
+			System.out.println("Converted JSON Visible Parameters to java:");
 			showMap(vmap);
+			System.out.println("java callback returning false");
+			return false; 
 		}
 		catch (Exception e)
 		{
+			System.out.println("java callback caught exception, returning false: " + e.toString());
 			e.printStackTrace();
+			return false;
 		}
 	}
 
@@ -68,7 +73,8 @@ public class JavaBridge
 
 		for (String key : m.keySet())
 		{
-			System.out.println(key + "=" + m.get(key) + ". Value is of type " +  m.get(key).getClass().getName());
+			//System.out.println(key + "=" + m.get(key) + ". Value is of type " +  m.get(key).getClass().getName());
+			System.out.println(key + "=" + m.get(key) );
 		}
 	}
 }

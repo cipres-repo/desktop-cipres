@@ -90,23 +90,34 @@ public class Main extends Application
 			to get called 3 times, SCHEDULED, RUNNING and SUCCEEDED.  Not sure we need it called more
 			than once.
 		*/
-		webEngine.getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) ->
+		webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>()
 		{
-			System.out.println("Setup console log, state is " + newValue);
-			// Get the current js window, wrapped in a JSObject
-			JSObject window = (JSObject) webEngine.executeScript("window");
 
+			@Override
+			public void changed(ObservableValue ov, State oldState, State newState)
+			{
+				System.out.println("Setup console log, state is " + newState);
+				// Get the current js window, wrapped in a JSObject
+				JSObject window = (JSObject) webEngine.executeScript("window");
+				
+				// Inject a member into the window, it's name is "java", it's value is the new bridge object.
+				JavaBridge bridge = new JavaBridge(stage);
+				window.setMember("java", bridge);
 
-			// Inject a member into the window, it's name is "java", it's value is the new bridge object.
-			JavaBridge bridge = new JavaBridge(stage);
-			window.setMember("java", bridge);
+				// Have the js engine run a script that changes the built in console.log function
+				// to point to a new fn, defined here as calling our bridge's log() method.
+				webEngine.executeScript("console.log = function(message)\n" + "{\n" + "    java.log(message);\n" + "};");
 
-			// Have the js engine run a script that changes the built in console.log function
-			// to point to a new fn, defined here as calling our bridge's log() method.
-			webEngine.executeScript("console.log = function(message)\n" + "{\n" + "    java.log(message);\n" + "};");
-			webEngine.executeScript("theCallback = function(iparams, vparams)\n" + "{\n" + "    java.callback(iparams, vparams);\n" + "};");
-			webEngine.executeScript("fileChooserType = 'desktop';\ntheFileChooser = function()\n" + "{\n" + "    return java.fileChooser();\n" + "};");
+				// Hopefully this is equivalent to Jquery(document).ready() state
+				if (newState == Worker.State.SUCCEEDED) 
+				{
+					webEngine.executeScript("theCallback = function(toolID, iparams, vparams)\n" + "{\n" + "    return java.callback(toolID, iparams, vparams);\n" + "};");
+					webEngine.executeScript("fileChooserType = 'desktop';\ntheFileChooser = function()\n" + "{\n" + "    return java.fileChooser();\n" + "};");
+					webEngine.executeScript("pise_tool.init(theCallback, fileChooserType, theFileChooser);");
+					webEngine.executeScript("pise_tool.chooseTool('https://bumper.sdsc.edu/cipresrest/v1/tool', '#cipres_tools', '#cipres_form');");
+				}
 
+			}
 		});
 
 		// This makes javascript alert() popup an alert dialog window.
